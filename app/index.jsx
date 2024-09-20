@@ -1,13 +1,19 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TextInput } from "react-native";
 import { useState } from "react";
 import FormField from "../components/FormField";
+import { useCameraPermissions} from "expo-camera";
+import { usePermissions } from "expo-media-library";
+
 
 
 export default function App() {
+  const [cameraPermissions, requestCameraPermissions] = useCameraPermissions();
+  const [mediaPermissions, requestMediaPermissions] = usePermissions();
+
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -24,7 +30,7 @@ export default function App() {
         />
 
         <Text style = {styles.title}>
-          Hello World! Welcome to{' '} 
+          Welcome to{' '} 
           <Text style = {{color: '#00bfff'}}>StyleSnap</Text>
           !
         </Text>
@@ -47,7 +53,15 @@ export default function App() {
           handleChangeText = {(e) => setForm({...form, password: e})}
         />
 
+        <TouchableOpacity onPress={() => {
+          // handle on press api calls here
+        }}>
 
+          <View style={styles.btn}>
+            <Text> Login </Text>
+          </View>
+          
+        </TouchableOpacity>
 
 
 
@@ -106,5 +120,8 @@ const styles = StyleSheet.create({
     flex:1,
     flexDirection:'column',
     justifyContent:'flex-end'
+  }, 
+  btn: {
+    backgroundColor: 'lightblue'
   }
 });
