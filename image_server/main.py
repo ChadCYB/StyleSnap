@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import base64
 # from PIL import Image
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
@@ -15,6 +16,31 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def generate_random_filename(length=10, ext='.jpeg'):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length)) + ext
+
+@app.post("/upload-image/")
+async def upload_image(image: str):
+    try:
+        # Check if the image is in base64 format
+        if image.startswith("data:image/"):
+            # Split the base64 string to get the actual data
+            header, encoded = image.split(",", 1)
+            # Decode the image
+            decoded_image = base64.b64decode(encoded)
+
+            # Create a unique filename
+            filename = generate_random_filename()
+            file_location = os.path.join(UPLOAD_DIR, filename)
+
+            # Save the image to the local filesystem
+            with open(filename, "wb") as image_file:
+                image_file.write(decoded_image)
+
+            return JSONResponse(content={"message": "Image saved successfully", "filename": filename})
+        else:
+            return JSONResponse(content={"error": "Invalid base64 image format"}, status_code=400)
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 # Endpoint to upload an image.
 @app.post("/upload")
@@ -43,4 +69,4 @@ async def get_image(filename: str):
 
 # if __name__ == "__main__":
 #     import uvicorn
-#     uvicorn.run(app, host="127.0.0.1", port=8000)
+#     uvicorn.run(app, host="127.0.0.1", port=8001)

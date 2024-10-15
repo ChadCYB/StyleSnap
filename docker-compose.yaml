@@ -1,62 +1,86 @@
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/config:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/ssl/cert
+    networks:
+      - backend
+    depends_on:
+      - ai-server
+
   image-server:
     build:
       context: ./image_server
       dockerfile: ./Dockerfile
     restart: always
     ports:
-      - 8002:8002
+      - 8001:8001
     volumes:
       - ./image_server/images:/code/images
     networks:
       - backend
-
-  redis:
-    image: redis
-    ports:
-      - 6379:6379
-    volumes:
-      - ./redis/data:/data
-      - ./redis/config:/usr/local/etc/redis
-      - ./redis/log:/var/log/redis
-    env_file:
-      - .env
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_DATABASES: ${REDIS_DATABASES}
-    networks:
-      - backend
-
-  mongo:
-    image: mongo
-    restart: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-    ports:
-      - 27017:27017
-    volumes:
-      - ./mongodb/db:/data/db
-      - ./mongodb/log:/var/log/mongodb
-    networks:
-      - backend
-
-  mongo-express:
-    image: mongo-express
+  
+  ai-server:
+    build:
+      context: ./AI_server
+      dockerfile: ./Dockerfile
     restart: always
     ports:
-      - 8081:8081
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
-      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USERNAME}
-      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_USERNAME}
+      - 8002:8002
+    networks:
+      - backend
     depends_on:
-      - mongo
-    networks:
-      - backend
+      - image-server
+
+#   redis:
+#     image: redis
+#     ports:
+#       - 6379:6379
+#     volumes:
+#       - ./redis/data:/data
+#       - ./redis/config:/usr/local/etc/redis
+#       - ./redis/log:/var/log/redis
+#     env_file:
+#       - .env
+#     environment:
+#       REDIS_PASSWORD: ${REDIS_PASSWORD}
+#       REDIS_PORT: ${REDIS_PORT}
+#       REDIS_DATABASES: ${REDIS_DATABASES}
+#     networks:
+#       - backend
+
+  # mongo:
+  #   image: mongo
+  #   restart: always
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - ./mongodb/db:/data/db
+  #     - ./mongodb/log:/var/log/mongodb
+  #   networks:
+  #     - backend
+
+  # mongo-express:
+  #   image: mongo-express
+  #   restart: always
+  #   ports:
+  #     - 8081:8081
+  #   environment:
+  #     - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+  #     - ME_CONFIG_MONGODB_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
+  #     - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USERNAME}
+  #     - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_USERNAME}
+  #   depends_on:
+  #     - mongo
+  #   networks:
+  #     - backend
 
 networks:
-  backend:  
+  backend:
