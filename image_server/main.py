@@ -3,8 +3,10 @@ import random
 import string
 import base64
 # from PIL import Image
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.responses import FileResponse, JSONResponse
+# from pydantic import BaseModel
+
 
 app = FastAPI()
 
@@ -12,14 +14,18 @@ app = FastAPI()
 UPLOAD_DIR = 'images'
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# class ImageInput(BaseModel):
+#     image: str  # base64 encoded string
+
 # Generate a random filename with a given length of ASCII letters.
 def generate_random_filename(length=10, ext='.jpeg'):
     letters = string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length)) + ext
 
 @app.post("/upload-image/")
-async def upload_image(image: str):
+async def upload_image(image: str = Form(...)):
     try:
+        # image = input.image
         # Check if the image is in base64 format
         if image.startswith("data:image/"):
             # Split the base64 string to get the actual data
@@ -32,7 +38,7 @@ async def upload_image(image: str):
             file_location = os.path.join(UPLOAD_DIR, filename)
 
             # Save the image to the local filesystem
-            with open(filename, "wb") as image_file:
+            with open(file_location, "wb") as image_file:
                 image_file.write(decoded_image)
 
             return JSONResponse(content={"message": "Image saved successfully", "filename": filename})

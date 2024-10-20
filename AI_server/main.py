@@ -6,7 +6,7 @@ from io import BytesIO
 
 app = FastAPI()
 
-@app.get("/")
+@app.post("/")
 async def get_image_base64(width: int = Query(500, ge=1), height: int = Query(500, ge=1)):
     try:
         # Fetch the image from Picsum with specified width and height
