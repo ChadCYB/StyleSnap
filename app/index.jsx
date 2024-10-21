@@ -19,6 +19,8 @@ export default function App() {
     password: '',
   });
 
+
+
   return (
     <SafeAreaView style = {{flex:1, /*justifyContent:'center',*/ backgroundColor:'eBef4e'}}>
       <View style={styles.container}>
