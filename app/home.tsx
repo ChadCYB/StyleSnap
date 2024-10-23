@@ -30,8 +30,18 @@ export default function home() {
   // handles the photo from camera
   async function handleTakePicture() {
     const response = await cameraRef.current?.takePictureAsync({});
-    console.log(response?.uri);
-    setPicture(response!.uri);
+    console.log(response)
+    const uri_img = response!.uri
+    console.log(uri_img);
+
+    //testing
+    const test = await fetch(uri_img);
+    const blob = await test.blob()
+    console.log('blb here',blob || 'hi')
+    //testing
+
+    setPicture(uri_img);
+
   }
 
   // For camera use only
@@ -56,10 +66,12 @@ export default function home() {
     );
   }
 
+
+  // Handles getting image from media library
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: false,
-      quality: 1
+      quality: 0.1
     });
 
     if (!result.canceled) {

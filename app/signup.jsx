@@ -127,6 +127,14 @@ const styles = StyleSheet.create({
     justifyContent:'flex-end'
   }, 
   btn: {
-    backgroundColor: 'lightblue'
+    backgroundColor: '#00bfff',
+    borderRadius:8,
+    borderWidth:1,
+    borderColor:'#00bfff',
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'center',
+    paddingVertical: 10,
+    paddingHorizontal: 130,
   }
 });

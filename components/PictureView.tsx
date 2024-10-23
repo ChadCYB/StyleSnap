@@ -6,12 +6,20 @@
  * and string of the style the user requests
  *  
  */
+
+const API = "https://nap.art/" 
+//const IMAGE_API = "https://nap.art/upload/"
+const IMAGE_API = "https://2ee.app/upload/"
+// Send image will return base64
+import axios from "axios";
+
 import { Image } from "expo-image";
 import { Alert, View } from "react-native";
 import IconButton from "./IconButton";
 //import { shareAsync } from "expo-sharing";
 import { saveToLibraryAsync } from "expo-media-library";
 import { Dropdown } from 'react-native-element-dropdown';
+import * as FileSystem from 'expo-file-system';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -26,6 +34,61 @@ const snapStyles = [
   {label: 'four', value: 'four'},
 ];
 
+
+const uploadImage = async (uri: string, b64: boolean) => {
+  const formData = new FormData();
+  // Creating a Blob from the image URI
+  //const response = await fetch(uri);
+  //console.log('res',response)
+  //const blob = await response.blob();
+  //console.log('blobl', blob)
+
+  //let file = FileSystem.
+
+  //formData.append('file', blob, 'image.jpg');
+
+  formData.append('file', {uri, name: 'image.jpg', type: 'image/jpeg'})
+
+  try {
+    if (b64 === true) {
+      console.log('b64')
+      // Read the image as Base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Prepare the payload
+      const payload = {
+        image: `data:image/jpeg;base64,${base64}`, // Prefix with the appropriate MIME type
+      };
+      console.log(payload)
+
+      // Send the Base64 string to the server
+      const response = await axios.post(IMAGE_API, payload, {
+        headers: {
+          'Content-Type': 'application/json', // Set the correct content type
+        },
+      });
+
+
+    } else {
+      console.log('file sent')
+      const response = await axios.post(IMAGE_API, formData, {
+        headers: {
+          'userStyle': '1',
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    
+
+    
+
+    console.log('Upload success'/*, response.data*/);
+  } catch (error) {
+    console.error('Upload failed', error);
+  }
+};
 
 
 interface PictureViewProps {
@@ -55,28 +118,19 @@ export default function PictureView({ picture, setPicture }: PictureViewProps) {
             Alert.alert("✅ Picture saved!");
           }}
           iosName={"arrow.down"}
-          androidName="close"
+          androidName="download-outline"
         />
+        
         <IconButton
-        // example buttons
+        // example button
           onPress={() => setPicture("")}
           iosName={"square.dashed"}
           androidName="close"
         />
         <IconButton
-          onPress={() => setPicture("")}
-          iosName={"circle.dashed"}
-          androidName="close"
-        />
-        <IconButton
-          onPress={() => setPicture("")}
-          iosName={"triangle"}
-          androidName="close"
-        />
-        <IconButton
           onPress={async () => setPicture("")/*await shareAsync(picture)'*/}
           iosName={"square.and.arrow.up"}
-          androidName="close"
+          androidName="share-social-outline"
         />
         <Dropdown 
         style= {{width:100,backgroundColor:'white',borderRadius:2}}
@@ -124,12 +178,26 @@ export default function PictureView({ picture, setPicture }: PictureViewProps) {
         // Have a seperate page for looking at server images
         // Alert for "Please wait a minute for image to finish"?
           onPress={() => {
-              console.log('user wants style: ',value)
-              console.log('user image: ', picture)
+
+            uploadImage(picture, false);
+
+            console.log('user wants style: ',value)
+            console.log('user image: ', picture)
+            /*
+            axios.post(API,{
+              image: picture
+            })
+            .then(function (response){
+              console.log(response);
+            });8*/
+
+
+
+
             }
           }
           iosName={"square.and.arrow.up"}
-          androidName="close"
+          androidName="send-outline"
         />
 
       </View>
