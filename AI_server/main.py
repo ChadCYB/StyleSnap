@@ -1,10 +1,43 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import requests
 import base64
 from io import BytesIO
+import logging
 
 app = FastAPI()
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+# CORS middleware (optional)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust as needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Log request details
+    logging.info(f"Request path: {request.url.path}")
+    logging.info(f"Request method: {request.method}")
+    logging.info(f"Request headers: {request.headers}")
+
+    # Read request body
+    body = await request.body()
+    logging.info(f"Request body: {body.decode('utf-8')}")
+
+    # Call the next middleware or endpoint
+    response = await call_next(request)
+
+    # Optionally log response details
+    logging.info(f"Response status: {response.status_code}")
+
+    return response
 
 @app.post("/")
 async def get_image_base64(width: int = Query(500, ge=1), height: int = Query(500, ge=1)):
