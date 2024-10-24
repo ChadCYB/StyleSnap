@@ -2,13 +2,48 @@ import os
 import random
 import string
 import base64
-# from PIL import Image
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+import io
+from PIL import Image
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+
 # from pydantic import BaseModel
 
 
 app = FastAPI()
+
+# # Set up logging
+# logging.basicConfig(level=logging.INFO)
+
+# # CORS middleware (optional)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Adjust as needed
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     # Log request details
+#     logging.info(f"Request path: {request.url.path}")
+#     logging.info(f"Request method: {request.method}")
+#     logging.info(f"Request headers: {request.headers}")
+
+#     # Read request body
+#     body = await request.body()
+#     logging.info(f"Request body: {body.decode('utf-8')}")
+
+#     # Call the next middleware or endpoint
+#     response = await call_next(request)
+
+#     # Optionally log response details
+#     logging.info(f"Response status: {response.status_code}")
+
+#     return response
 
 # Directory to save uploaded images
 UPLOAD_DIR = 'images'
@@ -49,17 +84,21 @@ async def upload_image(image: str = Form(...)):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 # Endpoint to upload an image.
-@app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
-    if not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="File type not supported.")
+@app.post("/upload/")
+async def upload_image(file: bytes = File(...)):
+    #if not file.content_type.startswith('image/'):
+    #    raise HTTPException(status_code=400, detail="File type not supported.")
 
     filename = generate_random_filename()
     file_location = os.path.join(UPLOAD_DIR, filename)
 
-    with open(file_location, "wb") as image_file:
-        content = await file.read()
-        image_file.write(content)
+    image_file = Image.open(io.BytesIO(file))
+    image_file.save(file_location)
+
+    # print(base64.b64encode(file))
+    # with open(file_location, "wb") as image_file:
+    #     content = await file.read()
+    #     image_file.write(content)
 
     return {"filename": filename}
 
