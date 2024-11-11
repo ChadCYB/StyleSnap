@@ -1,34 +1,15 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import requests
-import base64
 from io import BytesIO
 from PIL import Image
 import os
 import numpy as np
-import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from fastapi import FastAPI, Form, Request
 from pydantic import BaseModel
 
-
 app = FastAPI()
-
-# Generate a random filename with a given length of ASCII letters.
-def save_image(type_of_image, content):
-    # decoded_image = response.content
-    
-    UPLOAD_DIR = '/images'
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    filename = f"{type_of_image}_img.jpeg"
-    file_location = os.path.join(UPLOAD_DIR, filename)
-
-    # Save the image to the local filesystem
-    with open(filename, "wb") as image_file:
-        image_file.write(content)
-
 
 def transfer_style(content_image, style_image, model_path):
 
@@ -41,9 +22,7 @@ def transfer_style(content_image, style_image, model_path):
     """
 
     #--------------------------------------------------------------
-
     # resize the images to (1000,1000) if greater than (2000 x 2000)
-
     size_threshold = 2000
     resizing_shape = (1000,1000)
     content_shape = content_image.shape
@@ -69,8 +48,7 @@ def transfer_style(content_image, style_image, model_path):
     # The hub.load() loads any TF Hub model
     hub_module = hub.load(model_path)
         
-
-    # Stylize image.
+    # Stylize image
     outputs = hub_module(tf.constant(content_image), tf.constant(style_image))
     stylized_image = outputs[0]
 
@@ -87,7 +65,6 @@ class ImageData(BaseModel):
     content_image: str
     style_image: str
 
-
 """
 :param content_img: 
 :param style_img: 
@@ -97,7 +74,7 @@ async def get_image_base64(data: ImageData):
     try:
         content_image = data.content_image
         style_image = data.style_image
-                
+        
         print("content_image TYPE:", type(content_image))
         print("style_image TYPE:", type(style_image))
         print("content_image:", content_image)
@@ -121,19 +98,9 @@ async def get_image_base64(data: ImageData):
             BytesIO image_data
             str:base64 base64_image
             """
-            
             print("original_image_response TYPE:", type(original_image_response.content))
             print("style_image_response TYPE:", type(style_image_response.content))
 
-            style_image_data = BytesIO(style_image_response.content)
-            style_base64_image = base64.b64encode(style_image_data.read()).decode('utf-8')
-            style_image_final = f"data:image/jpeg;base64,{style_base64_image}"
-            
-            original_image_data = BytesIO(original_image_response.content)
-            original_base64_image = base64.b64encode(original_image_data.read()).decode('utf-8')
-            original_image_final = f"data:image/jpeg;base64,{original_base64_image}"
-            
-            
             # convert images to numpy array
             original_arr = np.array(Image.open(BytesIO(original_image_response.content))) 
             style_arr = np.array(Image.open(BytesIO(style_image_response.content))) 
@@ -147,42 +114,18 @@ async def get_image_base64(data: ImageData):
             output_image = transfer_style(original_arr, style_arr, model_path)
             # output_image = output_image.astype(np.uint8)
             output_image = (output_image * 255).astype(np.uint8)
-            output_image_final_Uh = f"data:image/jpeg;base64,{output_image}" #numpy_arr
-
 
             print("type of styled_image", type(output_image))
-            output_bytes_data = output_image.tobytes()
+            # output_bytes_data = output_image.tobytes()
             print("shape of styled_image", output_image.shape)
-            
-            # convert output_arr to bytes to base64 str
-            output_bytes_io_data = BytesIO(output_image.tobytes())
-            output_base64_image = base64.b64encode(output_bytes_io_data.read()).decode('utf-8')
-            output_image_final = f"data:image/jpeg;base64,{output_base64_image}"
-            
-            # print("output_base64_image: \t\t", output_base64_image[:15])
-            
-            # convert arr to base64 str
-            # output_base64_image_wo = base64.b64encode(output_image)
-            # output_base64_image_w = base64.b64encode(output_image).decode('utf-8')
-            # output_image_final = f"data:image/jpeg;base64,{output_base64_image}"
-            
-            # print("output_base64_image_wo: \t", output_base64_image_wo[:15])
-            # print("output_base64_image_w: \t", output_base64_image_w[:15])
-            # im = Image.fromarray(output_image)
             
             model_path = "/code"
             os.chdir(model_path)
             im = Image.fromarray(output_image)
             im.save("final_output.jpeg")
             
-            # Return the base64 image
-            #send final_img to image server, get link, return link to API server
-            # return JSONResponse(content={"output_image": output_base64_image})
-
-
             # Path to the image you want to upload
             image_path = "/code/final_output.jpeg"
-
             # URL of the API endpoint
             url = "http://image-server:8001/upload/"
 
